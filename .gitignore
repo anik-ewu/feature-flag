@@ -1,0 +1,89 @@
+# ---------------------------------------------------------------------------------------------------------------------
+# Full Stack .NET & Angular .gitignore
+# ---------------------------------------------------------------------------------------------------------------------
+
+# =========================
+# .NET Core & Backend
+# =========================
+[Bb]in/
+[Oo]bj/
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# Visual Studio / IDE specific
+.vs/
+.vscode/
+.idea/
+*.swp
+*.*~
+project.lock.json
+.DS_Store
+*.ntvs*
+*.njsproj
+*.sln.xcworkspace
+.mac/
+
+# Publish results
+[Pp]ublish/
+[Pp]ublish[Oo]utput/
+
+# EF Core Migrations
+*.db
+*.db-shm
+*.db-wal
+
+# Secrets & Configs
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
+
+# =========================
+# Angular 17 & Frontend
+# =========================
+# Node modules
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# IDEs and Editors
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# Angular CLI build & cache
+/Frontend/dist/
+/Frontend/tmp/
+/Frontend/out-tsc/
+/Frontend/bazel-out/
+/Frontend/.angular/
+
+# testing
+/Frontend/coverage/
+
+# e2e
+/Frontend/e2e/*.js
+/Frontend/e2e/*.map
+
+# Misc
+.sass-cache/
+/Frontend/connect.lock
+/Frontend/coverage
+/Frontend/libpeerconnection.log
+/Frontend/testem.log
+/Frontend/typings
+
+# System Files
+.DS_Store
+Thumbs.db
