@@ -11,7 +11,6 @@ public class DeleteFeatureFlagCommandValidator : AbstractValidator<DeleteFeature
     public DeleteFeatureFlagCommandValidator()
     {
         RuleFor(x => x.Id).NotEmpty();
-        RuleFor(x => x.ProjectId).NotEmpty();
     }
 }
 

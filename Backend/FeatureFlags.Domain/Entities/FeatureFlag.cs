@@ -36,9 +36,6 @@ public class FeatureFlag : BaseEntity
         string description, 
         EnvironmentType environment)
     {
-        if (projectId == Guid.Empty)
-            throw new ArgumentException("ProjectId cannot be empty.", nameof(projectId));
-
         if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentException("Feature flag key cannot be empty.", nameof(key));
 

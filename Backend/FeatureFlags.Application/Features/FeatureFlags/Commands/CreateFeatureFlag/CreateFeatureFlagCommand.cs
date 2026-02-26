@@ -16,7 +16,6 @@ public class CreateFeatureFlagCommandValidator : AbstractValidator<CreateFeature
 {
     public CreateFeatureFlagCommandValidator()
     {
-        RuleFor(x => x.ProjectId).NotEmpty();
         RuleFor(x => x.Key).NotEmpty().MaximumLength(100);
         RuleFor(x => x.Description).MaximumLength(500);
         RuleFor(x => x.Environment).IsInEnum();

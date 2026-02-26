@@ -16,7 +16,6 @@ public class UpdateFeatureFlagCommandValidator : AbstractValidator<UpdateFeature
     public UpdateFeatureFlagCommandValidator()
     {
         RuleFor(x => x.Id).NotEmpty();
-        RuleFor(x => x.ProjectId).NotEmpty();
         RuleFor(x => x.Description).MaximumLength(500);
         RuleFor(x => x.RolloutPercentage).InclusiveBetween(0, 100);
     }
