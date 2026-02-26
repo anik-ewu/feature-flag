@@ -1,0 +1,12 @@
+/Users/sabbirhasan/Documents/Personal/feature-flag/Backend/FeatureFlags.Domain/bin/Debug/net8.0/FeatureFlags.Domain.deps.json
+/Users/sabbirhasan/Documents/Personal/feature-flag/Backend/FeatureFlags.Domain/bin/Debug/net8.0/FeatureFlags.Domain.dll
+/Users/sabbirhasan/Documents/Personal/feature-flag/Backend/FeatureFlags.Domain/bin/Debug/net8.0/FeatureFlags.Domain.pdb
+/Users/sabbirhasan/Documents/Personal/feature-flag/Backend/FeatureFlags.Domain/obj/Debug/net8.0/FeatureFlags.Domain.GeneratedMSBuildEditorConfig.editorconfig
+/Users/sabbirhasan/Documents/Personal/feature-flag/Backend/FeatureFlags.Domain/obj/Debug/net8.0/FeatureFlags.Domain.AssemblyInfoInputs.cache
+/Users/sabbirhasan/Documents/Personal/feature-flag/Backend/FeatureFlags.Domain/obj/Debug/net8.0/FeatureFlags.Domain.AssemblyInfo.cs
+/Users/sabbirhasan/Documents/Personal/feature-flag/Backend/FeatureFlags.Domain/obj/Debug/net8.0/FeatureFlags.Domain.csproj.CoreCompileInputs.cache
+/Users/sabbirhasan/Documents/Personal/feature-flag/Backend/FeatureFlags.Domain/obj/Debug/net8.0/FeatureFlags.Domain.sourcelink.json
+/Users/sabbirhasan/Documents/Personal/feature-flag/Backend/FeatureFlags.Domain/obj/Debug/net8.0/FeatureFlags.Domain.dll
+/Users/sabbirhasan/Documents/Personal/feature-flag/Backend/FeatureFlags.Domain/obj/Debug/net8.0/refint/FeatureFlags.Domain.dll
+/Users/sabbirhasan/Documents/Personal/feature-flag/Backend/FeatureFlags.Domain/obj/Debug/net8.0/FeatureFlags.Domain.pdb
+/Users/sabbirhasan/Documents/Personal/feature-flag/Backend/FeatureFlags.Domain/obj/Debug/net8.0/ref/FeatureFlags.Domain.dll
