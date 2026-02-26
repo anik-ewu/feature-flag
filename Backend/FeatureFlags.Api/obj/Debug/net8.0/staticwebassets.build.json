@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "0OkNKOZuz6tzsXVrllR6l+J3lnPwbxGPHHyYEAP/KWI=",
+  "Source": "FeatureFlags.Api",
+  "BasePath": "_content/FeatureFlags.Api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
