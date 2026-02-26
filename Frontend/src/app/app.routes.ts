@@ -7,6 +7,14 @@ export const routes: Routes = [
         component: LayoutComponent,
         children: [
             {
+                path: 'dashboard',
+                loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
+            },
+            {
+                path: 'projects',
+                loadComponent: () => import('./features/projects/projects.component').then(m => m.ProjectsComponent)
+            },
+            {
                 path: 'feature-flags',
                 loadComponent: () => import('./features/feature-flags/components/flag-list/flag-list.component').then(m => m.FlagListComponent)
             },
@@ -14,7 +22,7 @@ export const routes: Routes = [
                 path: 'feature-flags/edit/:id',
                 loadComponent: () => import('./features/feature-flags/components/flag-detail/flag-detail.component').then(m => m.FlagDetailComponent)
             },
-            { path: '', redirectTo: 'feature-flags', pathMatch: 'full' }
+            { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
         ]
     },
     { path: '**', redirectTo: '' }

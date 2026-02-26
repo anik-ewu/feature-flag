@@ -9,18 +9,18 @@ import { MatButtonModule } from '@angular/material/button';
 import { CreateFeatureFlagRequest } from '../../../../core/models/feature-flag.model';
 
 @Component({
-    selector: 'app-flag-create-dialog',
-    standalone: true,
-    imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        MatDialogModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatSelectModule,
-        MatButtonModule
-    ],
-    template: `
+  selector: 'app-flag-create-dialog',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatButtonModule
+  ],
+  template: `
     <h2 mat-dialog-title>Create New Feature Flag</h2>
     
     <mat-dialog-content>
@@ -57,13 +57,12 @@ import { CreateFeatureFlagRequest } from '../../../../core/models/feature-flag.m
       <button mat-raised-button color="primary" [disabled]="flagForm.invalid" (click)="onSubmit()">Create</button>
     </mat-dialog-actions>
   `,
-    styles: [`
+  styles: [`
     .dialog-form {
       display: flex;
       flex-direction: column;
-      gap: 15px;
       min-width: 400px;
-      padding-top: 10px;
+      margin: 0;
     }
     .full-width {
       width: 100%;
@@ -71,24 +70,24 @@ import { CreateFeatureFlagRequest } from '../../../../core/models/feature-flag.m
   `]
 })
 export class FlagCreateDialogComponent {
-    private fb = inject(FormBuilder);
-    private dialogRef = inject(MatDialogRef<FlagCreateDialogComponent>);
+  private fb = inject(FormBuilder);
+  private dialogRef = inject(MatDialogRef<FlagCreateDialogComponent>);
 
-    flagForm: FormGroup = this.fb.group({
-        key: ['', [Validators.required, Validators.pattern(/^[a-z0-9-]+$/)]],
-        description: ['', [Validators.maxLength(500)]],
-        environment: [0, Validators.required]
-    });
+  flagForm: FormGroup = this.fb.group({
+    key: ['', [Validators.required, Validators.pattern(/^[a-z0-9-]+$/)]],
+    description: ['', [Validators.maxLength(500)]],
+    environment: [0, Validators.required]
+  });
 
-    onSubmit() {
-        if (this.flagForm.valid) {
-            const payload: Partial<CreateFeatureFlagRequest> = {
-                key: this.flagForm.value.key,
-                description: this.flagForm.value.description,
-                environment: this.flagForm.value.environment
-            };
-            // Let the parent component handle the actual HTTP request and ProjectId
-            this.dialogRef.close(payload);
-        }
+  onSubmit() {
+    if (this.flagForm.valid) {
+      const payload: Partial<CreateFeatureFlagRequest> = {
+        key: this.flagForm.value.key,
+        description: this.flagForm.value.description,
+        environment: this.flagForm.value.environment
+      };
+      // Let the parent component handle the actual HTTP request and ProjectId
+      this.dialogRef.close(payload);
     }
+  }
 }
