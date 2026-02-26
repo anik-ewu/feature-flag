@@ -1,14 +1,20 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { MatTableModule } from '@angular/material/table';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+
 import { FeatureFlagApiService } from '../../../../core/http/feature-flag-api.service';
-import { FeatureFlag } from '../../../../core/models/feature-flag.model';
+import { FeatureFlag, CreateFeatureFlagRequest } from '../../../../core/models/feature-flag.model';
+import { FlagCreateDialogComponent } from '../flag-create-dialog/flag-create-dialog.component';
 
 @Component({
     selector: 'app-flag-list',
@@ -17,16 +23,20 @@ import { FeatureFlag } from '../../../../core/models/feature-flag.model';
         CommonModule,
         RouterModule,
         MatTableModule,
+        MatPaginatorModule,
+        MatSortModule,
         MatButtonModule,
         MatIconModule,
         MatSlideToggleModule,
         MatCardModule,
-        MatProgressSpinnerModule
+        MatProgressSpinnerModule,
+        MatDialogModule,
+        MatSnackBarModule
     ],
     template: `
     <div class="header-actions">
       <h2>Feature Flags</h2>
-      <button mat-raised-button color="primary" routerLink="new">
+      <button mat-raised-button color="primary" (click)="openCreateDialog()">
         <mat-icon>add</mat-icon> Create Flag
       </button>
     </div>
@@ -36,47 +46,44 @@ import { FeatureFlag } from '../../../../core/models/feature-flag.model';
         <mat-spinner></mat-spinner>
       </div>
 
-      <table mat-table [dataSource]="flags" class="mat-elevation-z1">
-        <!-- Key Column -->
+      <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z1">
+        
         <ng-container matColumnDef="key">
-          <th mat-header-cell *matHeaderCellDef> Flag Key </th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Flag Key </th>
           <td mat-cell *matCellDef="let flag"> 
             <strong>{{flag.key}}</strong><br>
             <span class="text-muted">{{flag.environment}}</span>
           </td>
         </ng-container>
 
-        <!-- Description Column -->
         <ng-container matColumnDef="description">
           <th mat-header-cell *matHeaderCellDef> Description </th>
           <td mat-cell *matCellDef="let flag"> {{flag.description}} </td>
         </ng-container>
 
-        <!-- Status Column -->
         <ng-container matColumnDef="status">
-          <th mat-header-cell *matHeaderCellDef> Status </th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Status </th>
           <td mat-cell *matCellDef="let flag"> 
             <mat-slide-toggle 
+              color="primary"
               [checked]="flag.isEnabled" 
               (change)="toggleFlag(flag, $event.checked)">
             </mat-slide-toggle>
           </td>
         </ng-container>
 
-        <!-- Rollout Column -->
         <ng-container matColumnDef="rollout">
-          <th mat-header-cell *matHeaderCellDef> Rollout % </th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Rollout % </th>
           <td mat-cell *matCellDef="let flag"> {{flag.rolloutPercentage}}% </td>
         </ng-container>
 
-        <!-- Actions Column -->
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef>Actions</th>
           <td mat-cell *matCellDef="let flag">
-            <button mat-icon-button color="primary" [routerLink]="['edit', flag.id]">
-              <mat-icon>edit</mat-icon>
+            <button mat-icon-button color="primary" [routerLink]="['edit', flag.id]" matTooltip="Edit details & rules">
+              <mat-icon>settings</mat-icon>
             </button>
-            <button mat-icon-button color="warn" (click)="deleteFlag(flag)">
+            <button mat-icon-button color="warn" (click)="deleteFlag(flag)" matTooltip="Delete flag">
               <mat-icon>delete</mat-icon>
             </button>
           </td>
@@ -84,7 +91,15 @@ import { FeatureFlag } from '../../../../core/models/feature-flag.model';
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        
+        <!-- Row shown when there is no matching data. -->
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell" colspan="5" style="text-align: center; padding: 2rem;">No feature flags found for this project.</td>
+        </tr>
       </table>
+
+      <!-- Pagination Support Added -->
+      <mat-paginator [pageSizeOptions]="[10, 25, 100]" aria-label="Select page of flags"></mat-paginator>
     </mat-card>
   `,
     styles: [`
@@ -117,13 +132,22 @@ import { FeatureFlag } from '../../../../core/models/feature-flag.model';
 })
 export class FlagListComponent implements OnInit {
     private api = inject(FeatureFlagApiService);
+    private dialog = inject(MatDialog);
+    private snackBar = inject(MatSnackBar);
 
-    flags: FeatureFlag[] = [];
+    dataSource: MatTableDataSource<FeatureFlag>;
     displayedColumns: string[] = ['key', 'description', 'status', 'rollout', 'actions'];
     isLoading = true;
 
-    // Dummy Project ID for currently selected project
+    // Hardcoded for now, would typically come from Route Params or a State Management store natively
     currentProjectId = '00000000-0000-0000-0000-000000000000';
+
+    @ViewChild(MatPaginator) paginator!: MatPaginator;
+    @ViewChild(MatSort) sort!: MatSort;
+
+    constructor() {
+        this.dataSource = new MatTableDataSource<FeatureFlag>([]);
+    }
 
     ngOnInit() {
         this.loadFlags();
@@ -133,12 +157,42 @@ export class FlagListComponent implements OnInit {
         this.isLoading = true;
         this.api.getFlagsByProject(this.currentProjectId).subscribe({
             next: (data) => {
-                this.flags = data;
+                this.dataSource = new MatTableDataSource(data);
+                this.dataSource.paginator = this.paginator;
+                this.dataSource.sort = this.sort;
                 this.isLoading = false;
             },
             error: (err) => {
-                console.error('Failed to load flags', err);
+                console.error(err);
+                this.snackBar.open('Failed to load flags', 'Dismiss', { duration: 3000 });
                 this.isLoading = false;
+            }
+        });
+    }
+
+    openCreateDialog() {
+        const dialogRef = this.dialog.open(FlagCreateDialogComponent, {
+            width: '500px'
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+            if (result) {
+                this.isLoading = true;
+                const request: CreateFeatureFlagRequest = {
+                    ...result,
+                    projectId: this.currentProjectId
+                };
+
+                this.api.createFlag(request).subscribe({
+                    next: () => {
+                        this.snackBar.open('Flag created successfully', 'Close', { duration: 3000 });
+                        this.loadFlags(); // Refresh grid
+                    },
+                    error: () => {
+                        this.snackBar.open('Error creating flag', 'Close', { duration: 4000 });
+                        this.isLoading = false;
+                    }
+                });
             }
         });
     }
@@ -151,20 +205,25 @@ export class FlagListComponent implements OnInit {
             isEnabled,
             rolloutPercentage: flag.rolloutPercentage
         }).subscribe({
-            next: () => flag.isEnabled = isEnabled,
+            next: () => {
+                flag.isEnabled = isEnabled;
+                this.snackBar.open(`Flag ${isEnabled ? 'enabled' : 'disabled'}`, 'Close', { duration: 2000 });
+            },
             error: () => {
-                // Revert toggle on failure
-                flag.isEnabled = !isEnabled;
-                alert('Failed to update flag state.');
+                flag.isEnabled = !isEnabled; // Revert
+                this.snackBar.open('Failed to toggle flag.', 'Close', { duration: 3000 });
             }
         });
     }
 
     deleteFlag(flag: FeatureFlag) {
-        if (confirm(`Are you sure you want to delete flag ${flag.key}?`)) {
+        if (confirm(`Are you absolutely sure you want to delete flag ${flag.key}? This might break client apps depending on it.`)) {
             this.api.deleteFlag(flag.id, flag.projectId).subscribe({
-                next: () => this.loadFlags(),
-                error: () => alert('Failed to delete flag.')
+                next: () => {
+                    this.snackBar.open('Flag deleted', 'Close', { duration: 3000 });
+                    this.loadFlags();
+                },
+                error: () => this.snackBar.open('Failed to delete flag.', 'Close', { duration: 3000 })
             });
         }
     }
