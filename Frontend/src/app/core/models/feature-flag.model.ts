@@ -29,4 +29,5 @@ export interface UpdateFeatureFlagRequest {
     description: string;
     isEnabled: boolean;
     rolloutPercentage: number;
+    targetingRules?: any[];
 }

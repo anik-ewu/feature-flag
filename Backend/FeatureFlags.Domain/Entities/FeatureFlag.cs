@@ -85,4 +85,10 @@ public class FeatureFlag : BaseEntity
             UpdateTimestamp();
         }
     }
+
+    public void ClearTargetingRules()
+    {
+        _targetingRules.Clear();
+        UpdateTimestamp();
+    }
 }

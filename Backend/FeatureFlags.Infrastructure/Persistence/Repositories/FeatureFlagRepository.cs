@@ -43,7 +43,15 @@ public class FeatureFlagRepository : IFeatureFlagRepository
 
     public async Task UpdateAsync(FeatureFlag featureFlag, CancellationToken cancellationToken = default)
     {
-        _context.FeatureFlags.Update(featureFlag);
+        // Force EF Core to INSERT new rules instead of assuming they are already in the DB due to pre-generated Guids
+        foreach (var rule in featureFlag.TargetingRules)
+        {
+            var entry = _context.Entry(rule);
+            if (entry.State == EntityState.Detached || entry.State == EntityState.Modified)
+            {
+                entry.State = EntityState.Added;
+            }
+        }
         await _context.SaveChangesAsync(cancellationToken);
     }
 

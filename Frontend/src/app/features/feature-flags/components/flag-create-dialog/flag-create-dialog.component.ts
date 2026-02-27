@@ -63,6 +63,11 @@ import { CreateFeatureFlagRequest } from '../../../../core/models/feature-flag.m
       flex-direction: column;
       min-width: 400px;
       margin: 0;
+      padding-bottom: 20px;
+      padding-top: 10px;
+    }
+    mat-dialog-content {
+      max-height: 80vh;
     }
     .full-width {
       width: 100%;

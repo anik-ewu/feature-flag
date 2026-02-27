@@ -15,31 +15,32 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { FeatureFlagApiService } from '../../../../core/http/feature-flag-api.service';
+import { ProjectContextService } from '../../../../core/services/project-context.service';
 import { FeatureFlag, TargetingRule } from '../../../../core/models/feature-flag.model';
 
 @Component({
-    selector: 'app-flag-detail',
-    standalone: true,
-    imports: [
-        CommonModule,
-        RouterModule,
-        ReactiveFormsModule,
-        MatCardModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatSelectModule,
-        MatSlideToggleModule,
-        MatSliderModule,
-        MatButtonModule,
-        MatIconModule,
+  selector: 'app-flag-detail',
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterModule,
+    ReactiveFormsModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatSlideToggleModule,
+    MatSliderModule,
+    MatButtonModule,
+    MatIconModule,
     MatProgressSpinnerModule,
-        MatDividerModule,
-        MatSnackBarModule
-    ],
-    template: `
+    MatDividerModule,
+    MatSnackBarModule
+  ],
+  template: `
     <div class="page-container" *ngIf="flag; else loading">
       <div class="header">
-        <button mat-icon-button routerLink=".."><mat-icon>arrow_back</mat-icon></button>
+        <button mat-icon-button routerLink="/feature-flags"><mat-icon>arrow_back</mat-icon></button>
         <h2>Edit Flag: <code>{{flag.key}}</code></h2>
         <span class="spacer"></span>
         <button mat-raised-button color="primary" [disabled]="form.invalid" (click)="saveFlag()">
@@ -100,30 +101,32 @@ import { FeatureFlag, TargetingRule } from '../../../../core/models/feature-flag
                     <button mat-icon-button color="warn" (click)="removeRule(i)"><mat-icon>close</mat-icon></button>
                   </div>
 
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Target Property</mat-label>
-                    <mat-select formControlName="type">
-                      <mat-option value="UserId">User ID</mat-option>
-                      <mat-option value="Email">Email</mat-option>
-                      <mat-option value="Country">Country</mat-option>
-                      <mat-option value="CustomProperty">Custom JWT Property</mat-option>
-                    </mat-select>
-                  </mat-form-field>
+                  <div class="rule-fields">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Target Property</mat-label>
+                      <mat-select formControlName="type">
+                        <mat-option value="UserId">User ID</mat-option>
+                        <mat-option value="Email">Email</mat-option>
+                        <mat-option value="Country">Country</mat-option>
+                        <mat-option value="CustomProperty">Custom JWT Property</mat-option>
+                      </mat-select>
+                    </mat-form-field>
 
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Operator</mat-label>
-                    <mat-select formControlName="operator">
-                      <mat-option value="Equals">Equals</mat-option>
-                      <mat-option value="Contains">Contains</mat-option>
-                      <mat-option value="In">In (comma separated)</mat-option>
-                    </mat-select>
-                  </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Operator</mat-label>
+                      <mat-select formControlName="operator">
+                        <mat-option value="Equals">Equals</mat-option>
+                        <mat-option value="Contains">Contains</mat-option>
+                        <mat-option value="In">In (comma separated)</mat-option>
+                      </mat-select>
+                    </mat-form-field>
 
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Value</mat-label>
-                    <input matInput formControlName="value">
-                    <mat-error>Value is required</mat-error>
-                  </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Value</mat-label>
+                      <input matInput formControlName="value">
+                      <mat-error>Value is required</mat-error>
+                    </mat-form-field>
+                  </div>
                 </div>
               </div>
               
@@ -143,11 +146,11 @@ import { FeatureFlag, TargetingRule } from '../../../../core/models/feature-flag
       </div>
     </ng-template>
   `,
-    styles: [`
+  styles: [`
     .page-container { max-width: 1400px; margin: 0 auto; }
     .header { display: flex; align-items: center; margin-bottom: 20px; gap: 15px; }
     .spacer { flex: 1; }
-    .content-grid { display: grid; grid-template-columns: 2fr 1.5fr; gap: 20px; align-items: start; }
+    .content-grid { display: flex; flex-direction: column; gap: 20px; align-items: stretch; }
     .form-content { padding-top: 20px; }
     .mb-20 { margin-bottom: 20px; }
     .mt-10 { margin-top: 10px; }
@@ -157,101 +160,112 @@ import { FeatureFlag, TargetingRule } from '../../../../core/models/feature-flag
     .hint { color: #666; font-size: 0.85em; margin-top: 5px; }
     
     .rules-list { display: flex; flex-direction: column; gap: 15px; margin-top: 15px; }
-    .rule-box { border: 1px solid #e0e0e0; padding: 15px; border-radius: 4px; background: #fafafa; }
-    .rule-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .rule-box { border-left: 4px solid #3f51b5; padding: 15px 15px 5px 15px; border-radius: 4px; background: #fafafa; }
+    .rule-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+    .rule-fields { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; align-items: start; }
+    .rule-fields mat-form-field { width: 100%; }
     
     .loading-full { display: flex; justify-content: center; align-items: center; height: 50vh; }
   `]
 })
 export class FlagDetailComponent implements OnInit {
-    private route = inject(ActivatedRoute);
-    private router = inject(Router);
-    private api = inject(FeatureFlagApiService);
-    private fb = inject(FormBuilder);
-    private snackBar = inject(MatSnackBar);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private api = inject(FeatureFlagApiService);
+  private fb = inject(FormBuilder);
+  private snackBar = inject(MatSnackBar);
+  private context = inject(ProjectContextService);
 
-    flagId!: string;
-    projectId = '00000000-0000-0000-0000-000000000000'; // Hardcoded for demo
-    flag!: FeatureFlag;
+  flagId!: string;
+  projectId: string | null = null;
+  flag!: FeatureFlag;
 
-    form: FormGroup = this.fb.group({
-        description: [''],
-        isEnabled: [false],
-        rolloutPercentage: [0],
-        rules: this.fb.array([])
+  form: FormGroup = this.fb.group({
+    description: [''],
+    isEnabled: [false],
+    rolloutPercentage: [0],
+    rules: this.fb.array([])
+  });
+
+  get rules() {
+    return this.form.get('rules') as FormArray;
+  }
+
+  ngOnInit() {
+    this.flagId = this.route.snapshot.paramMap.get('id')!;
+    this.context.currentProjectId$.subscribe(id => {
+      this.projectId = id;
+      if (id && !this.flag) {
+        this.loadFlag();
+      }
+    });
+  }
+
+  loadFlag() {
+    if (!this.projectId) return;
+
+    this.api.getFlagById(this.flagId, this.projectId).subscribe({
+      next: (data) => {
+        this.flag = data;
+        this.populateForm();
+      },
+      error: () => {
+        this.snackBar.open('Flag not found', 'Close');
+        this.router.navigate(['/feature-flags']);
+      }
+    });
+  }
+
+  populateForm() {
+    this.form.patchValue({
+      description: this.flag.description,
+      isEnabled: this.flag.isEnabled,
+      rolloutPercentage: this.flag.rolloutPercentage
     });
 
-    get rules() {
-        return this.form.get('rules') as FormArray;
-    }
-
-    ngOnInit() {
-        this.flagId = this.route.snapshot.paramMap.get('id')!;
-        this.loadFlag();
-    }
-
-    loadFlag() {
-        this.api.getFlagById(this.flagId, this.projectId).subscribe({
-            next: (data) => {
-                this.flag = data;
-                this.populateForm();
-            },
-            error: () => {
-                this.snackBar.open('Flag not found', 'Close');
-                this.router.navigate(['..'], { relativeTo: this.route });
-            }
-        });
-    }
-
-    populateForm() {
-        this.form.patchValue({
-            description: this.flag.description,
-            isEnabled: this.flag.isEnabled,
-            rolloutPercentage: this.flag.rolloutPercentage
-        });
-
-        this.rules.clear();
-        if (this.flag.targetingRules) {
-            this.flag.targetingRules.forEach(rule => {
-                this.rules.push(this.fb.group({
-                    type: [rule.type, Validators.required],
-                    operator: [rule.operator, Validators.required],
-                    value: [rule.value, Validators.required]
-                }));
-            });
-        }
-    }
-
-    addRule() {
+    this.rules.clear();
+    if (this.flag.targetingRules) {
+      this.flag.targetingRules.forEach(rule => {
         this.rules.push(this.fb.group({
-            type: ['UserId', Validators.required],
-            operator: ['Equals', Validators.required],
-            value: ['', Validators.required]
+          type: [rule.type, Validators.required],
+          operator: [rule.operator, Validators.required],
+          value: [rule.value, Validators.required]
         }));
+      });
     }
+  }
 
-    removeRule(index: number) {
-        this.rules.removeAt(index);
-    }
+  addRule() {
+    this.rules.push(this.fb.group({
+      type: ['UserId', Validators.required],
+      operator: ['Equals', Validators.required],
+      value: ['', Validators.required]
+    }));
+  }
 
-    saveFlag() {
-        if (this.form.invalid) return;
+  removeRule(index: number) {
+    this.rules.removeAt(index);
+  }
 
-        // Send the core update (backend might need separate endpoint for rules currently based on CQRS tasks)
-        const updateReq = {
-            id: this.flag.id,
-            projectId: this.projectId,
-            description: this.form.value.description,
-            isEnabled: this.form.value.isEnabled,
-            rolloutPercentage: this.form.value.rolloutPercentage
-        };
+  saveFlag() {
+    if (this.form.invalid || !this.projectId) return;
 
-        this.api.updateFlag(updateReq).subscribe({
-            next: () => {
-                this.snackBar.open('Flag updated successfully', 'Success', { duration: 3000 });
-                this.router.navigate(['..'], { relativeTo: this.route });
-            },
-            error: () => this.snackBar.open('Failed to update flag', 'Close')
-        });
-    }
+    // Send the core update (backend might need separate endpoint for rules currently based on CQRS tasks)
+    const updateReq = {
+      id: this.flag.id,
+      projectId: this.projectId,
+      description: this.form.value.description,
+      isEnabled: this.form.value.isEnabled,
+      rolloutPercentage: this.form.value.rolloutPercentage,
+      targetingRules: this.form.value.rules
+    };
+
+    this.api.updateFlag(updateReq).subscribe({
+      next: () => {
+        this.snackBar.open('Flag updated successfully', 'Success', { duration: 3000 });
+        this.router.navigate(['/feature-flags']);
+      },
+      error: () => this.snackBar.open('Failed to update flag', 'Close')
+    });
+  }
 }
