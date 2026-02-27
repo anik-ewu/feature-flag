@@ -25,4 +25,10 @@ public class ProjectRepository : IProjectRepository
             .Where(p => p.TenantId == tenantId)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task AddAsync(Project project, CancellationToken cancellationToken = default)
+    {
+        await _context.Projects.AddAsync(project, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
 }

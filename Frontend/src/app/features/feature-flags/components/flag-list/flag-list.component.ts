@@ -13,27 +13,28 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { FeatureFlagApiService } from '../../../../core/http/feature-flag-api.service';
+import { ProjectContextService } from '../../../../core/services/project-context.service';
 import { FeatureFlag, CreateFeatureFlagRequest } from '../../../../core/models/feature-flag.model';
 import { FlagCreateDialogComponent } from '../flag-create-dialog/flag-create-dialog.component';
 
 @Component({
-    selector: 'app-flag-list',
-    standalone: true,
-    imports: [
-        CommonModule,
-        RouterModule,
-        MatTableModule,
-        MatPaginatorModule,
-        MatSortModule,
-        MatButtonModule,
-        MatIconModule,
-        MatSlideToggleModule,
-        MatCardModule,
-        MatProgressSpinnerModule,
-        MatDialogModule,
-        MatSnackBarModule
-    ],
-    template: `
+  selector: 'app-flag-list',
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterModule,
+    MatTableModule,
+    MatPaginatorModule,
+    MatSortModule,
+    MatButtonModule,
+    MatIconModule,
+    MatSlideToggleModule,
+    MatCardModule,
+    MatProgressSpinnerModule,
+    MatDialogModule,
+    MatSnackBarModule
+  ],
+  template: `
     <div class="header-actions">
       <h2>Feature Flags</h2>
       <button mat-raised-button color="primary" (click)="openCreateDialog()">
@@ -102,7 +103,7 @@ import { FlagCreateDialogComponent } from '../flag-create-dialog/flag-create-dia
       <mat-paginator [pageSizeOptions]="[10, 25, 100]" aria-label="Select page of flags"></mat-paginator>
     </mat-card>
   `,
-    styles: [`
+  styles: [`
     .header-actions {
       display: flex;
       justify-content: space-between;
@@ -131,100 +132,111 @@ import { FlagCreateDialogComponent } from '../flag-create-dialog/flag-create-dia
   `]
 })
 export class FlagListComponent implements OnInit {
-    private api = inject(FeatureFlagApiService);
-    private dialog = inject(MatDialog);
-    private snackBar = inject(MatSnackBar);
+  private api = inject(FeatureFlagApiService);
+  private dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
 
-    dataSource: MatTableDataSource<FeatureFlag>;
-    displayedColumns: string[] = ['key', 'description', 'status', 'rollout', 'actions'];
-    isLoading = true;
+  private context = inject(ProjectContextService);
 
-    // Hardcoded for now, would typically come from Route Params or a State Management store natively
-    currentProjectId = '00000000-0000-0000-0000-000000000000';
+  dataSource: MatTableDataSource<FeatureFlag>;
+  displayedColumns: string[] = ['key', 'description', 'status', 'rollout', 'actions'];
+  isLoading = true;
 
-    @ViewChild(MatPaginator) paginator!: MatPaginator;
-    @ViewChild(MatSort) sort!: MatSort;
+  currentProjectId: string | null = null;
 
-    constructor() {
-        this.dataSource = new MatTableDataSource<FeatureFlag>([]);
-    }
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
 
-    ngOnInit() {
+  constructor() {
+    this.dataSource = new MatTableDataSource<FeatureFlag>([]);
+  }
+
+  ngOnInit() {
+    this.context.currentProjectId$.subscribe(id => {
+      this.currentProjectId = id;
+      if (id) {
         this.loadFlags();
-    }
+      } else {
+        this.dataSource.data = [];
+      }
+    });
+  }
 
-    loadFlags() {
+  loadFlags() {
+    if (!this.currentProjectId) return;
+
+    this.isLoading = true;
+    this.api.getFlagsByProject(this.currentProjectId).subscribe({
+      next: (data) => {
+        this.dataSource = new MatTableDataSource(data);
+        this.dataSource.paginator = this.paginator;
+        this.dataSource.sort = this.sort;
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error(err);
+        this.snackBar.open('Failed to load flags', 'Dismiss', { duration: 3000 });
+        this.isLoading = false;
+      }
+    });
+  }
+
+  openCreateDialog() {
+    const dialogRef = this.dialog.open(FlagCreateDialogComponent, {
+      width: '500px'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && this.currentProjectId) {
         this.isLoading = true;
-        this.api.getFlagsByProject(this.currentProjectId).subscribe({
-            next: (data) => {
-                this.dataSource = new MatTableDataSource(data);
-                this.dataSource.paginator = this.paginator;
-                this.dataSource.sort = this.sort;
-                this.isLoading = false;
-            },
-            error: (err) => {
-                console.error(err);
-                this.snackBar.open('Failed to load flags', 'Dismiss', { duration: 3000 });
-                this.isLoading = false;
-            }
+        const request: CreateFeatureFlagRequest = {
+          ...result,
+          projectId: this.currentProjectId
+        };
+
+        this.api.createFlag(request).subscribe({
+          next: () => {
+            this.snackBar.open('Flag created successfully', 'Close', { duration: 3000 });
+            this.loadFlags(); // Refresh grid
+          },
+          error: () => {
+            this.snackBar.open('Error creating flag', 'Close', { duration: 4000 });
+            this.isLoading = false;
+          }
         });
+      }
+    });
+  }
+
+  toggleFlag(flag: FeatureFlag, isEnabled: boolean) {
+    this.api.updateFlag({
+      id: flag.id,
+      projectId: flag.projectId,
+      description: flag.description,
+      isEnabled,
+      rolloutPercentage: flag.rolloutPercentage,
+      targetingRules: flag.targetingRules
+    }).subscribe({
+      next: () => {
+        flag.isEnabled = isEnabled;
+        this.snackBar.open(`Flag ${isEnabled ? 'enabled' : 'disabled'}`, 'Close', { duration: 2000 });
+      },
+      error: () => {
+        flag.isEnabled = !isEnabled; // Revert
+        this.snackBar.open('Failed to toggle flag.', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  deleteFlag(flag: FeatureFlag) {
+    if (confirm(`Are you absolutely sure you want to delete flag ${flag.key}? This might break client apps depending on it.`)) {
+      this.api.deleteFlag(flag.id, flag.projectId).subscribe({
+        next: () => {
+          this.snackBar.open('Flag deleted', 'Close', { duration: 3000 });
+          this.loadFlags();
+        },
+        error: () => this.snackBar.open('Failed to delete flag.', 'Close', { duration: 3000 })
+      });
     }
-
-    openCreateDialog() {
-        const dialogRef = this.dialog.open(FlagCreateDialogComponent, {
-            width: '500px'
-        });
-
-        dialogRef.afterClosed().subscribe(result => {
-            if (result) {
-                this.isLoading = true;
-                const request: CreateFeatureFlagRequest = {
-                    ...result,
-                    projectId: this.currentProjectId
-                };
-
-                this.api.createFlag(request).subscribe({
-                    next: () => {
-                        this.snackBar.open('Flag created successfully', 'Close', { duration: 3000 });
-                        this.loadFlags(); // Refresh grid
-                    },
-                    error: () => {
-                        this.snackBar.open('Error creating flag', 'Close', { duration: 4000 });
-                        this.isLoading = false;
-                    }
-                });
-            }
-        });
-    }
-
-    toggleFlag(flag: FeatureFlag, isEnabled: boolean) {
-        this.api.updateFlag({
-            id: flag.id,
-            projectId: flag.projectId,
-            description: flag.description,
-            isEnabled,
-            rolloutPercentage: flag.rolloutPercentage
-        }).subscribe({
-            next: () => {
-                flag.isEnabled = isEnabled;
-                this.snackBar.open(`Flag ${isEnabled ? 'enabled' : 'disabled'}`, 'Close', { duration: 2000 });
-            },
-            error: () => {
-                flag.isEnabled = !isEnabled; // Revert
-                this.snackBar.open('Failed to toggle flag.', 'Close', { duration: 3000 });
-            }
-        });
-    }
-
-    deleteFlag(flag: FeatureFlag) {
-        if (confirm(`Are you absolutely sure you want to delete flag ${flag.key}? This might break client apps depending on it.`)) {
-            this.api.deleteFlag(flag.id, flag.projectId).subscribe({
-                next: () => {
-                    this.snackBar.open('Flag deleted', 'Close', { duration: 3000 });
-                    this.loadFlags();
-                },
-                error: () => this.snackBar.open('Failed to delete flag.', 'Close', { duration: 3000 })
-            });
-        }
-    }
+  }
 }

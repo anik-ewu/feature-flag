@@ -14,6 +14,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<FeatureFlag> FeatureFlags => Set<FeatureFlag>();
     public DbSet<TargetingRule> TargetingRules => Set<TargetingRule>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<EnvironmentApiKey> ApiKeys => Set<EnvironmentApiKey>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

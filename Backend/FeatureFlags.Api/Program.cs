@@ -3,6 +3,7 @@ using FeatureFlags.Infrastructure;
 using FeatureFlags.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,7 +12,11 @@ builder.Host.UseSerilog((context, loggerConfig) =>
     loggerConfig.ReadFrom.Configuration(context.Configuration));
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -39,7 +44,7 @@ using (var scope = app.Services.CreateScope())
     await context.Database.MigrateAsync();
 
     var tenantId = Guid.Parse("11111111-1111-1111-1111-111111111111");
-    var projectId = Guid.Empty;
+    var projectId = Guid.Parse("df78f806-5785-43b2-8355-c3a09817664a");
 
     var tenantExists = await context.Tenants.AnyAsync(t => t.Id == tenantId);
     if (!tenantExists)
