@@ -32,7 +32,8 @@ public class GetFeatureFlagsByProjectQueryHandler : IRequestHandler<GetFeatureFl
                 r.Type.ToString(),
                 r.Operator.ToString(),
                 r.Value
-            ))
+            )),
+            f.UpdatedAtUtc
         ));
     }
 }

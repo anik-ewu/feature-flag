@@ -7,6 +7,7 @@ export interface FeatureFlag {
     rolloutPercentage: number;
     environment: string;
     targetingRules: TargetingRule[];
+    updatedAtUtc?: string;
 }
 
 export interface TargetingRule {

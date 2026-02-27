@@ -37,7 +37,8 @@ public class GetFeatureFlagByIdQueryHandler : IRequestHandler<GetFeatureFlagById
                 r.Type.ToString(),
                 r.Operator.ToString(),
                 r.Value
-            ))
+            )),
+            featureFlag.UpdatedAtUtc
         );
     }
 }

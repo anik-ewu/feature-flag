@@ -8,7 +8,8 @@ public record FeatureFlagDto(
     bool IsEnabled,
     int RolloutPercentage,
     string Environment,
-    IEnumerable<TargetingRuleDto> TargetingRules
+    IEnumerable<TargetingRuleDto> TargetingRules,
+    DateTime? UpdatedAtUtc
 );
 
 public record TargetingRuleDto(

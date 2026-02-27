@@ -8,21 +8,21 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 
 @Component({
-    selector: 'app-layout',
-    standalone: true,
-    imports: [
-        CommonModule,
-        RouterModule,
-        MatToolbarModule,
-        MatSidenavModule,
-        MatListModule,
-        MatIconModule,
-        MatButtonModule
-    ],
-    template: `
+  selector: 'app-layout',
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterModule,
+    MatToolbarModule,
+    MatSidenavModule,
+    MatListModule,
+    MatIconModule,
+    MatButtonModule
+  ],
+  template: `
     <mat-sidenav-container class="sidenav-container">
       <mat-sidenav #sidenav mode="side" opened class="sidenav">
-        <mat-toolbar color="primary">SaaS Admin</mat-toolbar>
+        <mat-toolbar color="primary">FlagMaster</mat-toolbar>
         <mat-nav-list>
           <a mat-list-item routerLink="/dashboard" routerLinkActive="active">
             <mat-icon matListItemIcon>dashboard</mat-icon>
@@ -55,7 +55,7 @@ import { MatButtonModule } from '@angular/material/button';
       </mat-sidenav-content>
     </mat-sidenav-container>
   `,
-    styles: [`
+  styles: [`
     .sidenav-container {
       height: 100vh;
     }

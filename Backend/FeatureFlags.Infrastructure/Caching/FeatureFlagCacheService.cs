@@ -79,7 +79,8 @@ public class FeatureFlagCacheService : IFeatureFlagCacheService
                         r.Type.ToString(),
                         r.Operator.ToString(),
                         r.Value
-                    ))
+                    )),
+                    f.UpdatedAtUtc
                 )).ToList();
 
             // 5. Populate cache
