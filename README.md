@@ -1,4 +1,4 @@
-# Feature Flag SaaS Platform
+# FlagMaster - Feature Flag SaaS Platform
 
 A full-stack Feature Flag management platform designed to allow engineering teams to progressively decouple code deployments from feature releases. Built with a robust **.NET 8 Clean Architecture** backend and a modern **Angular 17 Standalone** frontend.
 
@@ -15,7 +15,7 @@ The backend is structured using **Clean Architecture** (Domain, Application, Inf
 *   **Serilog**: Structured application logging.
 
 ### Frontend Dashboard (`/Frontend`)
-The administrative dashboard used by product managers and engineers to toggle flags, configure rollout percentages, and manage dynamic user targeting rules.
+The administrative command center for "FlagMaster", used by product managers and engineers to toggle flags, configure rollout percentages, manage multiple project environments, and issue secure evaluation tokens.
 
 *   **Angular 17**: Utilizing the latest Standalone Components architecture.
 *   **Angular Material**: Extensive use of Material Design components (Dialogs, Data Tables, Sliders, Forms).
@@ -72,7 +72,10 @@ Access the visual dashboard by navigating to `http://localhost:4200` in your bro
 
 ## 🛠️ Core Features
 
-1.  **Multi-Tenancy Setup**: (Base logic implemented) Flags are grouped strictly by `Project` which in turn belong to organizations/`Tenant`s.
+1.  **Multi-Tenancy Setup**: Flags are grouped strictly by **Projects** which in turn belong to isolated Organizations (`Tenant`s).
 2.  **Environment Specificity**: Define flags for *Development*, *Staging*, or *Production* independently.
-3.  **Percentage Rollouts**: Dial up a feature from 0% to 100% using consistent-hashing to ensure users have a sticky experience.
+3.  **Percentage Rollouts**: Dial up a feature from 0% to 100% using consistent-hashing to ensure users have a sticky predictable experience.
 4.  **Targeting Rules**: Dynamically apply inclusion/exclusion rules based on specific logical operators (e.g. `Equals`, `Contains`, `StartsWith`).
+5.  **Dynamic Project Management**: Instantly create, swap, and manage multiple sub-projects inside a tenant, with a reactive Context Service that hot-reloads the UI grids dynamically.
+6.  **Environment SDK Tokens**: Generate and manage secure API Keys per environment and project to safely connect your external applications to the Evaluation Engine.
+7.  **Real-Time Dashboard Overview**: Monitor total system load and instantly see recently modified flags.
