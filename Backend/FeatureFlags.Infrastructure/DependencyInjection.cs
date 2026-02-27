@@ -2,6 +2,7 @@ using FeatureFlags.Application.Common.Interfaces;
 using FeatureFlags.Infrastructure.Caching;
 using FeatureFlags.Infrastructure.Persistence;
 using FeatureFlags.Infrastructure.Persistence.Repositories;
+using FeatureFlags.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,6 +32,7 @@ public static class DependencyInjection
         services.AddScoped<IFeatureFlagCacheService, FeatureFlagCacheService>();
         services.AddScoped<IFeatureFlagRepository, FeatureFlagRepository>();
         services.AddScoped<IProjectRepository, ProjectRepository>();
+        services.AddScoped<IEnvironmentApiKeyRepository, EnvironmentApiKeyRepository>();
 
         return services;
     }

@@ -7,15 +7,13 @@ using MediatR;
 
 namespace FeatureFlags.Application.Features.Evaluation;
 
-public record EvaluateFeatureFlagsQuery(EvaluationRequestDto Request) : IRequest<EvaluationResponseDto>;
+public record EvaluateFeatureFlagsQuery(string ApiKey, EvaluationRequestDto Request) : IRequest<EvaluationResponseDto>;
 
 public class EvaluateFeatureFlagsQueryValidator : AbstractValidator<EvaluateFeatureFlagsQuery>
 {
     public EvaluateFeatureFlagsQueryValidator()
     {
-        RuleFor(x => x.Request.TenantId).NotEmpty();
-        RuleFor(x => x.Request.ProjectKey).NotEmpty();
-        RuleFor(x => x.Request.Environment).NotEmpty();
+        RuleFor(x => x.ApiKey).NotEmpty();
         RuleFor(x => x.Request.UserId).NotEmpty(); // Required for percentage rollout
         RuleFor(x => x.Request.Attributes).NotNull();
     }
@@ -24,31 +22,30 @@ public class EvaluateFeatureFlagsQueryValidator : AbstractValidator<EvaluateFeat
 public class EvaluateFeatureFlagsQueryHandler : IRequestHandler<EvaluateFeatureFlagsQuery, EvaluationResponseDto>
 {
     private readonly IFeatureFlagCacheService _cacheService;
-    private readonly IProjectRepository _projectRepository; // To resolve ProjectKey -> ProjectId
+    private readonly IEnvironmentApiKeyRepository _apiKeyRepository;
 
     public EvaluateFeatureFlagsQueryHandler(
         IFeatureFlagCacheService cacheService,
-        IProjectRepository projectRepository)
+        IEnvironmentApiKeyRepository apiKeyRepository)
     {
         _cacheService = cacheService;
-        _projectRepository = projectRepository;
+        _apiKeyRepository = apiKeyRepository;
     }
 
     public async Task<EvaluationResponseDto> Handle(EvaluateFeatureFlagsQuery request, CancellationToken cancellationToken)
     {
-        // 1. Resolve Project (In production, this should also be cached via a ProjectCacheService)
-        // Note: The user prompt asked for ProjectKey in the request payload, but the Project entity only has Name and Id.
-        // For SaaS, "Name" or "Key" acts as the unique identifier for the tenant's project.
-        // Assuming we resolve the ProjectId from the cache or DB based on TenantId + ProjectKey.
-        var projectId = await ResolveProjectIdAsync(request.Request.TenantId, request.Request.ProjectKey, cancellationToken);
+        // 1. Resolve ProjectId and Environment from the API Key
+        // In a high-throughput scenario, the API Key lookup itself should be cached.
+        var apiKeyEntity = await _apiKeyRepository.GetByKeyAsync(request.ApiKey, cancellationToken);
         
-        if (projectId == Guid.Empty)
+        if (apiKeyEntity == null)
         {
+            // Invalid API key
             return new EvaluationResponseDto(new Dictionary<string, bool>());
         }
 
         // 2. Fetch all flags from high-performance cache
-        var flags = await _cacheService.GetFlagsAsync(projectId, request.Request.Environment, cancellationToken);
+        var flags = await _cacheService.GetFlagsAsync(apiKeyEntity.ProjectId, apiKeyEntity.Environment.ToString(), cancellationToken);
 
         // 3. Evaluate each flag
         var result = new Dictionary<string, bool>();
@@ -130,15 +127,5 @@ public class EvaluateFeatureFlagsQueryHandler : IRequestHandler<EvaluateFeatureF
             RuleOperator.NotIn => !rule.Value.Split(',').Select(x => x.Trim()).Contains(targetValue, StringComparer.OrdinalIgnoreCase),
             _ => false
         };
-    }
-
-    private async Task<Guid> ResolveProjectIdAsync(Guid tenantId, string projectKey, CancellationToken cancellationToken)
-    {
-        // THIS MUST BE CACHED IN A REAL APP to prevent DB Hit per request.
-        // For now, we simulate resolving it.
-        // In the upcoming Infrastructure layer, we will implement this via a Cache-Aside pattern.
-        
-        // Return dummy/simulated ID for the sake of the interface building
-        return Guid.NewGuid(); // Placeholder: to be replaced with actual Cache lookup
     }
 }

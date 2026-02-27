@@ -18,8 +18,15 @@ public class EvaluateController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<EvaluationResponseDto>> Evaluate([FromBody] EvaluationRequestDto request)
     {
+        if (!Request.Headers.TryGetValue("X-Environment-Key", out var apiKeyHeader))
+        {
+            return Unauthorized("X-Environment-Key header is missing.");
+        }
+
+        var apiKey = apiKeyHeader.ToString();
+
         // Fast path query via MediatR -> Core Logic -> Cache
-        var response = await _mediator.Send(new EvaluateFeatureFlagsQuery(request));
+        var response = await _mediator.Send(new EvaluateFeatureFlagsQuery(apiKey, request));
         
         return Ok(response.Flags);
     }
